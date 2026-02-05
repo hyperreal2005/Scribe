@@ -1,0 +1,55 @@
+[project]
+user_env = []
+session_timeout = 3600
+user_session_timeout = 86400 # 1 days
+cache = false
+transports = ["websocket"]
+allow_origins = ["*"]
+
+[features]
+unsafe_allow_html = false
+latex = true
+user_message_autoscroll = true
+auto_tag_thread = true
+edit_message = true
+allow_thread_sharing = true
+
+[features.spontaneous_file_upload]
+enabled = true
+accept = [
+  "image/*",
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/msword",
+  "application/octet-stream"
+]
+accept_extensions = { "application/octet-stream" = [".docx", ".doc"] }
+max_files = 2
+max_size_mb = 5
+
+[features.audio]
+enabled = true
+sample_rate = 24000
+
+[features.mcp.sse]
+enabled = false
+
+[features.mcp.stdio]
+enabled = true
+allowed_executables = ["npx", "uvx"]
+
+[UI]
+name = "Scribe"
+default_theme = "dark"
+default_sidebar_state = "open"
+cot = "tool_call"
+custom_css = "frontend/public/custom.css"
+alert_style = "modern"
+login_page_image = ""
+login_page_image_filter = ""
+login_page_image_dark_filter = ""
+logo_file_url = ""
+default_avatar_file_url = ""
+
+[meta]
+generated_by = "2.6.3"

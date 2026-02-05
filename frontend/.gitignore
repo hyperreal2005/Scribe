@@ -1,0 +1,7 @@
+__pycache__
+.ropeproject
+*.pyc
+*.vscode
+.idea
+.env
+.chainlit/

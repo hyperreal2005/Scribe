@@ -1,0 +1,13 @@
+/* Hide the original logo image */
+.header-logo-image {
+  display: none !important;
+}
+
+/* Add text in its place */
+.header-logo-container::before {
+  content: "Scribe"; /* Replace with your desired text */
+  color: #ffffff; /* Customize the color */
+  font-size: 20px; /* Customize the font size */
+  font-weight: bold;
+  padding: 10px; /* Adjust padding as needed */
+}

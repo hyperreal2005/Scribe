@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+venv/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Logs
+logs/
+
+# OS / editor
+.DS_Store
+.vscode/
+
+# App / build artifacts
+.data/
+.files/
+public/.files/
+.env
+
+# Docker artifacts
+Dockerfile
+compose.yml
+.dockerignore
