@@ -31,7 +31,13 @@ QDRANT_API_KEY=your_qdrant_api_key
 RAG_BACKEND_URL=http://localhost:8001
 RAG_TOP_K=5
 RAG_DOCS_PATH=./docs
-AI_LOG_FILE=logs/ai_frontend.logv
+RAG_CHAT_MODEL=gemini-2.5-flash
+RAG_EMBED_MODEL=gemini-embedding-001
+RAG_TEMPERATURE=0.7
+RAG_QDRANT_TIMEOUT_SECONDS=90
+RAG_QDRANT_UPSERT_BATCH_SIZE=64
+RAG_RECREATE_COLLECTION_ON_DIM_MISMATCH=true
+AI_LOG_FILE=logs/ai_frontend.log
 ```
 
 Notes:
@@ -73,4 +79,6 @@ Supported file types:
 
 ### Troubleshooting
 - If you see `relation "Thread" does not exist`, run the Prisma migration again.
-- If RAG retrieval fails, verify `QDRANT_URL` uses `https://` and that `QDRANT_API_KEY` is set.
+- If ingest/retrieval fails with model `NOT_FOUND`, set `RAG_EMBED_MODEL=gemini-embedding-001`.
+- If you change embedding model dimensions, keep `RAG_RECREATE_COLLECTION_ON_DIM_MISMATCH=true` for automatic collection reset (dev mode).
+- If Qdrant writes time out on cloud, increase `RAG_QDRANT_TIMEOUT_SECONDS` (e.g., `180`).

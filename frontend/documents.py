@@ -31,6 +31,13 @@ def _read_bytes(file: cl.File) -> bytes:
     raise ValueError("Unable to read uploaded file bytes (no content or path)")
 
 
+def _decode_text(raw: bytes) -> str:
+    try:
+        return raw.decode("utf-8")
+    except UnicodeDecodeError:
+        return raw.decode("cp1252", errors="ignore")
+
+
 async def extract_documents_text(files: List[cl.File]) -> str:
     parts: List[str] = []
     for f in files:
@@ -58,15 +65,26 @@ async def extract_documents_text(files: List[cl.File]) -> str:
                     p = tmp.name
                 doc = Document(p)  # type: ignore
                 text_lines = [
-                    p.text.strip() for p in doc.paragraphs if p.text and p.text.strip()
+                    para.text.strip()
+                    for para in doc.paragraphs
+                    if para.text and para.text.strip()
                 ]
                 os.unlink(p)
                 if text_lines:
                     parts.append(f"**{name}**\n" + "\n".join(text_lines))
+            elif ext in (".txt", ".md", ".markdown"):
+                raw = _read_bytes(f)
+                decoded = _decode_text(raw).strip()
+                if decoded:
+                    parts.append(f"**{name}**\n{decoded}")
             else:
                 cl.logger.info(
-                    f"Skipped document {name} (ext={ext}, available: PDF={PDF_AVAILABLE}, DOCX={DOCX_AVAILABLE})"
+                    "Skipped document %s (ext=%s, available: PDF=%s, DOCX=%s)",
+                    name,
+                    ext,
+                    PDF_AVAILABLE,
+                    DOCX_AVAILABLE,
                 )
-        except Exception as e:  # defensive
-            cl.logger.error(f"Error reading document {name}: {e}")
+        except Exception as exc:  # defensive
+            cl.logger.error("Error reading document %s: %s", name, exc)
     return "\n\n".join(parts)

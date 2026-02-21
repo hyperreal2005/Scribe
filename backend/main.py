@@ -2,10 +2,9 @@ import logging
 import os
 from typing import Any, Dict, Optional
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
-
-from dotenv import load_dotenv
 
 from .rag import RagService
 
@@ -13,7 +12,7 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Scribe RAG Backend", version="0.1.0")
+app = FastAPI(title="Scribe RAG Backend", version="0.2.0")
 rag = RagService()
 
 
@@ -23,6 +22,7 @@ class IngestTextRequest(BaseModel):
     title: Optional[str] = None
     path: Optional[str] = None
     metadata: Dict[str, Any] = Field(default_factory=dict)
+    scope_id: Optional[str] = None
 
 
 class IngestFolderRequest(BaseModel):
@@ -33,6 +33,18 @@ class IngestFolderRequest(BaseModel):
 class RetrieveRequest(BaseModel):
     query: str = Field(..., min_length=1)
     top_k: int = Field(default=5, ge=1, le=20)
+    scope_id: Optional[str] = None
+    include_global: bool = True
+
+
+class ChatRequest(BaseModel):
+    message: str = Field(..., min_length=1)
+    top_k: int = Field(default=5, ge=1, le=20)
+    scope_id: Optional[str] = None
+    system_prompt: Optional[str] = None
+    uploaded_text: Optional[str] = None
+    use_web_search: bool = False
+    temperature: float = Field(default=0.7, ge=0.0, le=2.0)
 
 
 @app.on_event("startup")
@@ -66,6 +78,7 @@ async def ingest_text(req: IngestTextRequest) -> Dict[str, Any]:
             title=req.title,
             path=req.path,
             metadata=req.metadata,
+            scope_id=req.scope_id,
         )
     except Exception as exc:
         logger.exception("Ingest failed")
@@ -84,7 +97,12 @@ async def ingest_folder(req: IngestFolderRequest) -> Dict[str, Any]:
 @app.post("/retrieve")
 async def retrieve(req: RetrieveRequest) -> Dict[str, Any]:
     try:
-        chunks = await rag.retrieve(req.query, top_k=req.top_k)
+        chunks = await rag.retrieve(
+            req.query,
+            top_k=req.top_k,
+            scope_id=req.scope_id,
+            include_global=req.include_global,
+        )
         return {
             "results": [
                 {"text": c.text, "score": c.score, "payload": c.payload} for c in chunks
@@ -92,4 +110,21 @@ async def retrieve(req: RetrieveRequest) -> Dict[str, Any]:
         }
     except Exception as exc:
         logger.exception("Retrieve failed")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/chat")
+async def chat(req: ChatRequest) -> Dict[str, Any]:
+    try:
+        return await rag.chat(
+            req.message,
+            system_prompt=req.system_prompt,
+            uploaded_text=req.uploaded_text,
+            scope_id=req.scope_id,
+            top_k=req.top_k,
+            use_web_search=req.use_web_search,
+            temperature=req.temperature,
+        )
+    except Exception as exc:
+        logger.exception("Chat failed")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
